@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 class Interpret {
-	private Object obj;
+	public Object obj;
 	public Class<?> cls;
 	private MethodSet[] methodSet;
 	private ShowFrame showFrame;
@@ -109,7 +109,6 @@ class Interpret {
 	public void setField(String name, Object value) {
 		try {
 			Field f = cls.getDeclaredField(name);
-
 			boolean isAccessible = f.isAccessible();
 			f.setAccessible(true);
 			f.set(obj, value);

@@ -14,11 +14,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 public class ShowFrame extends Frame {
 	private GridBagLayout gbLayout = new GridBagLayout();
-	private TextField classText = new TextField("java.awt.Frame", 30);
+	private TextField classText = new TextField("java.lang.Integer", 30);
 	private Choice classes = new Choice();
 	private Choice fields = new Choice();
 	private Choice methods = new Choice();
@@ -31,11 +32,13 @@ public class ShowFrame extends Frame {
 	private Button runButton;
 	private Button registerButton;
 	private Button loadButton;
-	private Interpret cntObj;
+	private Button setFieldButton;
+	private Button arrayButton;
+	private Interpret cntInterpret;
 	private Interpret.FieldSet[] fieldList = new Interpret.FieldSet[0];
 	private Interpret.MethodSet[] methodList = new Interpret.MethodSet[0];
 	private ArrayList<Interpret> register = new ArrayList<Interpret>();
-	private Object loadObj;
+	private Interpret loadinterpret;
 	private boolean isLoad = false;
 	
 	public static void main(String[] args) {
@@ -57,9 +60,9 @@ public class ShowFrame extends Frame {
 				clearInputAll();
 				fields.removeAll();
 				methods.removeAll();
-				cntObj = new Interpret(e.getActionCommand(), ShowFrame.this);
+				cntInterpret = new Interpret(e.getActionCommand(), ShowFrame.this);
 
-				methodList = cntObj.getConstructor();
+				methodList = cntInterpret.getConstructor();
 
 				for (Interpret.MethodSet ms : methodList)
 					methods.add(ms.toString());
@@ -85,7 +88,7 @@ public class ShowFrame extends Frame {
 
 				Constructor<?> cons = (Constructor<?>) methodList[mIndex].member;
 
-				cntObj.createCons(cons, argClass.toArray());
+				cntInterpret.createCons(cons, argClass.toArray());
 
 				showFieldsAndMethods();
 
@@ -100,8 +103,8 @@ public class ShowFrame extends Frame {
 				ArrayList<Object> argClass = new ArrayList<Object>();
 				String[] sArg;
 				if (isLoad == true) {
-					argClass.add(loadObj);
-					cntObj.runMethod((Method) methodList[mIndex].member, argClass.toArray() );
+					argClass.add(loadinterpret.obj);
+					cntInterpret.runMethod((Method) methodList[mIndex].member, argClass.toArray() );
 				}
 				else {
 				
@@ -114,7 +117,7 @@ public class ShowFrame extends Frame {
 					argClass.add(getTypeValue(methodList[mIndex].args[i],
 							sArg[i]));
 
-				Object returnValue = cntObj.runMethod(
+				Object returnValue = cntInterpret.runMethod(
 						(Method) methodList[mIndex].member, argClass.toArray());
 
 				showFieldsAndMethods();
@@ -126,7 +129,7 @@ public class ShowFrame extends Frame {
 		// オブジェクトの登録
 		registerButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				register.add(cntObj);
+				register.add(cntInterpret);
 				classes.add(classText.getText());
 			}
 		});
@@ -136,10 +139,33 @@ public class ShowFrame extends Frame {
 			public void actionPerformed(ActionEvent e) {
 				String strObj = classes.getSelectedItem();
 				methodArg.setText(strObj);
-				loadObj = register.get(classes.getItemCount()-1);
+				loadinterpret = register.get(classes.getItemCount()-1);
 				isLoad = true;
 			}
 		});
+		
+		//フィールドの設定
+		setFieldButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int fIndex = serchIndexField(fields.getSelectedItem());
+				String outputString;
+				Object preVal = cntInterpret.obj;
+				
+				outputString = "preVal:" + preVal.toString();
+				
+				String setVal = fieldValue.getText();
+				Object val = getTypeValue(fieldList[fIndex].type, setVal);
+				cntInterpret.setField(fieldList[fIndex].name, val);
+				
+				outputString += "cntVal:" + cntInterpret.obj.toString();
+				
+				outputArea.setText(outputString);
+				
+			}
+		});
+		
+		
+		
 	}
 
 	// 選択されたフィールドのインデックスを返す
@@ -179,6 +205,24 @@ public class ShowFrame extends Frame {
 			return value;
 	}
 
+	private Object getTypeValue(Type type, String value) {
+		if (type.equals(int.class))
+			return Integer.parseInt(value);
+		else if (type.equals(double.class))
+			return Double.parseDouble(value);
+		else if (type.equals(long.class))
+			return Long.parseLong(value);
+		else if (type.equals(float.class))
+			return Float.parseFloat(value);
+		else if (type.equals(short.class))
+			return Short.parseShort(value);
+		else if (type.equals(byte.class))
+			return Byte.parseByte(value);
+		else if (type.equals(boolean.class))
+			return Boolean.parseBoolean(value);
+		else
+			return value;
+	}
 	private Class<?> getType(String name) {
 		if (name.equals("int"))
 			return int.class;
@@ -199,8 +243,8 @@ public class ShowFrame extends Frame {
 	}
 
 	private void showFieldsAndMethods() {
-		fieldList = cntObj.getFieldSet();
-		methodList = cntObj.getMethods();
+		fieldList = cntInterpret.getFieldSet();
+		methodList = cntInterpret.getMethods();
 		fields.removeAll();
 		methods.removeAll();
 		for (Interpret.FieldSet fs : fieldList)
@@ -258,7 +302,12 @@ public class ShowFrame extends Frame {
 
 		createObjButton = new Button("オブジェクト生成");
 		this.addButton(createObjButton, 1, 8, 1, 1);
+		
+		setFieldButton = new Button("フィールドセット");
+		this.addButton(setFieldButton, 0, 9, 1, 1);
 
+		arrayButton = new Button("配列生成");
+		this.addButton(arrayButton, 1, 9, 1, 1);
 		setLayout(this.gbLayout);
 	}
 
