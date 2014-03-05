@@ -123,13 +123,13 @@ class Interpret {
 			f.set(obj, value);
 			f.setAccessible(isAccessible);
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		}
 	}
 
@@ -140,14 +140,15 @@ class Interpret {
 			f.setAccessible(true);
 			f.set(objArr[index], value);
 			f.setAccessible(isAccessible);
+
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		}
 	}
 	public MethodSet[] getMethods() {
@@ -163,7 +164,7 @@ class Interpret {
 						methods[i].getName(), methods[i].getParameterTypes());
 				methods[i].setAccessible(isAccessible);
 			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
+				showFrame.outputException(e);
 			}
 		}
 
@@ -177,14 +178,13 @@ class Interpret {
 				args[i] = argObj[i];
 			obj = constructor.newInstance(args);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (InstantiationException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (InvocationTargetException e) {
-			Throwable cause = e.getCause();
-			showFrame.outputException(cause);
+			showFrame.outputException(e);
 		}
 	}
 	
@@ -201,14 +201,13 @@ class Interpret {
 		
 			obj = constructor.newInstance(args);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (InstantiationException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (InvocationTargetException e) {
-			Throwable cause = e.getCause();
-			showFrame.outputException(cause);
+			showFrame.outputException(e);
 		}
 	}
 
@@ -235,14 +234,13 @@ class Interpret {
 			method.setAccessible(isAccessible);
 
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			showFrame.outputException(e);
 		} catch (InvocationTargetException e) {
-			Throwable cause = e.getCause();
-			showFrame.outputException(cause);
+			showFrame.outputException(e);
 		}
 
 		return returnValue;

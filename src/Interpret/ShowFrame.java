@@ -354,10 +354,9 @@ public class ShowFrame extends Frame {
 		setLayout(this.gbLayout);
 	}
 
-	public void outputException(Throwable e) {
+	public void outputException(Exception e) {
 		outputArea.setText(e.toString());
 	}
-
 	void clearInputAll() {
 		// .setText("");
 		fieldValue.setText("");
