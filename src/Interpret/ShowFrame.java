@@ -23,9 +23,7 @@ public class ShowFrame extends Frame {
 	private Choice classes = new Choice();
 	private Choice fields = new Choice();
 	private Choice methods = new Choice();
-	// private TextField fieldName = new TextField(30);
 	private TextField fieldValue = new TextField(30);
-	// private TextField methodName = new TextField(30);
 	private TextField methodArg = new TextField(30);
 	private TextField outputArea = new TextField(30);
 	private Button createObjButton;
@@ -40,9 +38,11 @@ public class ShowFrame extends Frame {
 	private ArrayList<Interpret> register = new ArrayList<Interpret>();
 	private Interpret loadinterpret;
 	private boolean isLoad = false;
-	
+	private boolean isArr = false;
+
 	public static void main(String[] args) {
 		new ShowFrame("interpret");
+
 	}
 
 	public ShowFrame(String title) {
@@ -57,17 +57,18 @@ public class ShowFrame extends Frame {
 		// コンストラクタ
 		classText.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+
 				clearInputAll();
 				fields.removeAll();
 				methods.removeAll();
-				cntInterpret = new Interpret(e.getActionCommand(), ShowFrame.this);
-
+				cntInterpret = new Interpret(e.getActionCommand(),
+						ShowFrame.this);
 				methodList = cntInterpret.getConstructor();
 
 				for (Interpret.MethodSet ms : methodList)
 					methods.add(ms.toString());
-
 			}
+
 		});
 
 		// オブジェクト生成
@@ -88,7 +89,13 @@ public class ShowFrame extends Frame {
 
 				Constructor<?> cons = (Constructor<?>) methodList[mIndex].member;
 
-				cntInterpret.createCons(cons, argClass.toArray());
+				if (isArr) {
+					int numArr = Integer.parseInt(fieldValue.getText());
+					cntInterpret.createCons(cons, argClass.toArray(), numArr);
+				}
+
+				else
+					cntInterpret.createCons(cons, argClass.toArray());
 
 				showFieldsAndMethods();
 
@@ -104,23 +111,24 @@ public class ShowFrame extends Frame {
 				String[] sArg;
 				if (isLoad == true) {
 					argClass.add(loadinterpret.obj);
-					cntInterpret.runMethod((Method) methodList[mIndex].member, argClass.toArray() );
-				}
-				else {
-				
-				if (methodArg.getText().equals(""))
-					sArg = new String[0];
-				else
-					sArg = methodArg.getText().split(",");
+					cntInterpret.runMethod((Method) methodList[mIndex].member,
+							argClass.toArray());
+				} else {
 
-				for (int i = 0; i < sArg.length; i++)
-					argClass.add(getTypeValue(methodList[mIndex].args[i],
-							sArg[i]));
+					if (methodArg.getText().equals(""))
+						sArg = new String[0];
+					else
+						sArg = methodArg.getText().split(",");
 
-				Object returnValue = cntInterpret.runMethod(
-						(Method) methodList[mIndex].member, argClass.toArray());
+					for (int i = 0; i < sArg.length; i++)
+						argClass.add(getTypeValue(methodList[mIndex].args[i],
+								sArg[i]));
 
-				showFieldsAndMethods();
+					Object returnValue = cntInterpret.runMethod(
+							(Method) methodList[mIndex].member,
+							argClass.toArray());
+
+					showFieldsAndMethods();
 				}
 				isLoad = false;
 			}
@@ -133,39 +141,79 @@ public class ShowFrame extends Frame {
 				classes.add(classText.getText());
 			}
 		});
-		
-		//オブジェクトの読み込み
+
+		// オブジェクトの読み込み
 		loadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String strObj = classes.getSelectedItem();
 				methodArg.setText(strObj);
-				loadinterpret = register.get(classes.getItemCount()-1);
+				loadinterpret = register.get(classes.getItemCount() - 1);
 				isLoad = true;
 			}
 		});
-		
-		//フィールドの設定
+
+		// フィールドの設定
 		setFieldButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int fIndex = serchIndexField(fields.getSelectedItem());
-				String outputString;
-				Object preVal = cntInterpret.obj;
-				
-				outputString = "preVal:" + preVal.toString();
-				
-				String setVal = fieldValue.getText();
-				Object val = getTypeValue(fieldList[fIndex].type, setVal);
-				cntInterpret.setField(fieldList[fIndex].name, val);
-				
-				outputString += "cntVal:" + cntInterpret.obj.toString();
-				
-				outputArea.setText(outputString);
-				
+
+				if (isArr) {
+
+					//読み込み
+					if (methodArg.getText().equals("read")) {
+						String val = cntInterpret.objArr[Integer.parseInt(fieldValue.getText())].toString();
+						outputArea.setText("Index:" + fieldValue.getText() + "Val:" + val);
+					} else {
+						for (int i = 0; i < cntInterpret.objArr.length; i++) {
+							if (i == Integer.parseInt(methodArg.getText())) {
+								String outputString = "Index:"
+										+ methodArg.getText();
+								Object preVal = cntInterpret.objArr[i];
+
+								outputString += "preVal:" + preVal.toString();
+
+								String setVal = fieldValue.getText();
+								Object val = getTypeValue(
+										fieldList[fIndex].type, setVal);
+								cntInterpret.setField(fieldList[fIndex].name,
+										val,
+										Integer.parseInt(methodArg.getText()));
+
+								outputString += "cntVal:"
+										+ cntInterpret.objArr[i].toString();
+
+								outputArea.setText(outputString);
+							}
+
+						}
+					}
+				} else {
+					String outputString;
+					Object preVal = cntInterpret.obj;
+
+					outputString = "preVal:" + preVal.toString();
+
+					String setVal = fieldValue.getText();
+					Object val = getTypeValue(fieldList[fIndex].type, setVal);
+					cntInterpret.setField(fieldList[fIndex].name, val);
+
+					outputString += "cntVal:" + cntInterpret.obj.toString();
+
+					outputArea.setText(outputString);
+				}
 			}
 		});
-		
-		
-		
+
+		// 配列の起動
+		arrayButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				isArr = !isArr;
+				if (isArr)
+					outputArea.setText("Arr Mode");
+				else
+					outputArea.setText("");
+			}
+		});
 	}
 
 	// 選択されたフィールドのインデックスを返す
@@ -223,6 +271,7 @@ public class ShowFrame extends Frame {
 		else
 			return value;
 	}
+
 	private Class<?> getType(String name) {
 		if (name.equals("int"))
 			return int.class;
@@ -272,18 +321,12 @@ public class ShowFrame extends Frame {
 		title = new Label("オブジェクト");
 		this.addLabel(title, 0, 3, 1, 1);
 		this.addChoice(classes, 1, 3, 1, 1);
-		/*
-		 * title = new Label("選択フィールド"); this.addLabel(title, 0, 4, 1, 1);
-		 * this.addTextField(fieldName, 1, 4, 1, 1);
-		 */
-		title = new Label("値");
+
+		title = new Label("値、配列サイズ、変更値、読み込みインデックス");
 		this.addLabel(title, 0, 4, 1, 1);
 		this.addTextField(fieldValue, 1, 4, 1, 1);
-		/*
-		 * title = new Label("選択メソッド"); this.addLabel(title, 0, 6, 1, 1);
-		 * this.addTextField(methodName, 1, 6, 1, 1);
-		 */
-		title = new Label("引数");
+
+		title = new Label("引数、変更値インデックス");
 		this.addLabel(title, 0, 5, 1, 1);
 		this.addTextField(methodArg, 1, 5, 1, 1);
 
@@ -302,7 +345,7 @@ public class ShowFrame extends Frame {
 
 		createObjButton = new Button("オブジェクト生成");
 		this.addButton(createObjButton, 1, 8, 1, 1);
-		
+
 		setFieldButton = new Button("フィールドセット");
 		this.addButton(setFieldButton, 0, 9, 1, 1);
 

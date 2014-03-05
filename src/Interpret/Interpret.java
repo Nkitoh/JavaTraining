@@ -1,5 +1,6 @@
 package Interpret;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -9,9 +10,11 @@ import java.lang.reflect.Type;
 
 class Interpret {
 	public Object obj;
+	public Object[] objArr;
 	public Class<?> cls;
-	private MethodSet[] methodSet;
 	private ShowFrame showFrame;
+	private FieldSet[] array;
+	private MethodSet[] methodSet;
 
 	class FieldSet {
 		public final Member member;
@@ -26,7 +29,10 @@ class Interpret {
 			this.type = type;
 			this.value = value;
 
-			fullName = member.toString();
+			if (member != null)
+				fullName = member.toString();
+			else
+				fullName = "array";
 		}
 
 		public String toString() {
@@ -48,7 +54,10 @@ class Interpret {
 			this.returnValue = returnValue;
 			this.args = args;
 
-			fullName = member.toString();
+			if (member != null)
+				fullName = member.toString();
+			else
+				fullName = "array";
 		}
 
 		public String toString() {
@@ -67,15 +76,15 @@ class Interpret {
 		return returnValue;
 	}
 
-	Interpret(String name, ShowFrame ui) {
-		this.showFrame = ui;
+	Interpret(String name, ShowFrame showFrame) {
+		this.showFrame = showFrame;
 		try {
 			cls = Class.forName(name);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public MethodSet[] getConstructor() {
 		Constructor<?>[] consts = cls.getConstructors();
 		MethodSet[] cSet = new MethodSet[consts.length];
@@ -124,6 +133,23 @@ class Interpret {
 		}
 	}
 
+	public void setField(String name, Object value, int index) {
+		try {
+			Field f = cls.getDeclaredField(name);
+			boolean isAccessible = f.isAccessible();
+			f.setAccessible(true);
+			f.set(objArr[index], value);
+			f.setAccessible(isAccessible);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (NoSuchFieldException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
 	public MethodSet[] getMethods() {
 		Method[] methods = cls.getMethods();
 		MethodSet[] mSet = new MethodSet[methods.length];
@@ -159,6 +185,39 @@ class Interpret {
 		} catch (InvocationTargetException e) {
 			Throwable cause = e.getCause();
 			showFrame.outputException(cause);
+		}
+	}
+	
+	//配列
+	public void createCons(Constructor<?> constructor, Object[] argObj, int numArr) {
+		try {
+			objArr = (Object[]) Array.newInstance(cls, numArr);
+			Object[] args = new Object[argObj.length];
+			for (int i = 0; i < argObj.length; i++)
+				args[i] = argObj[i];
+			
+			for (int i = 0; i < numArr; i++)
+				objArr[i] = constructor.newInstance(args);
+		
+			obj = constructor.newInstance(args);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			Throwable cause = e.getCause();
+			showFrame.outputException(cause);
+		}
+	}
+
+	public void createArr(int numArr) {
+		obj = Array.newInstance(cls, numArr);
+		array = new FieldSet[numArr];
+		for (int i = 0; i < array.length; i++) {
+			array[i] = new FieldSet(null, cls, "array[" + String.valueOf(i)
+					+ "]", "null");
 		}
 	}
 
