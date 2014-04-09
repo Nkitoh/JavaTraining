@@ -1,0 +1,6 @@
+this is a pen;
+this is a book;
+this is an apple;
+this is a table:
+
+this is a chair;

@@ -1,0 +1,12 @@
+test
+this is a test.
+do
+re
+mi
+fa
+
+test
+
+test!
+
+finish
